@@ -5,8 +5,8 @@
 This research project investigates the significant decline in Taiwan’s Foreign Direct Investment (FDI) in China from 2008 to 2023. The study focuses on identifying the economic and geopolitical factors driving this trend, with a sector-specific analysis of traditional and advanced manufacturing.
 
 ### Objective
-	•	Primary Goal: Understand the relationship between Taiwan’s FDI in China and various economic/geopolitical factors.
-	•	Sectoral Focus: Analyze differences in drivers for traditional and advanced manufacturing sectors.
+- Primary Goal: Understand the relationship between Taiwan’s FDI in China and various economic/geopolitical factors.
+- Sectoral Focus: Analyze differences in drivers for traditional and advanced manufacturing sectors.
 
 ### Key Findings
 	•	Significant Factors:
