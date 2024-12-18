@@ -1,0 +1,613 @@
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/williamwu/Desktop/ECO375 New Datasets/myanalysis.log
+  log type:  text
+ opened on:   3 Dec 2024, 17:46:36
+
+. 
+. ssc install asdoc
+checking asdoc consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. 
+. * Load the dataset
+. use dataset_aoi_combined.dta, clear
+
+. 
+. * Ensure 'date' is in a date format suitable for monthly data
+. gen date_monthly = mofd(date) // Convert to monthly dates
+
+. format date_monthly %tm // Format as monthly
+
+. 
+. * Declare the dataset as time-series data
+. tsset date_monthly
+
+Time variable: date_monthly, 2007m1 to 2023m12
+        Delta: 1 month
+
+. 
+. * Create lagged variables
+. gen gpr_lag1m = L1.gpr
+(1 missing value generated)
+
+. gen epu_lag6m = L6.epu
+(6 missing values generated)
+
+. gen chngdpgrowth_lag1y = L12.chngdpgrowth
+(12 missing values generated)
+
+. gen seaavggdpgrowth_lag1y = L12.seaavggdpgrowth
+(12 missing values generated)
+
+. gen hpi_lag1y = L12.hpi
+(12 missing values generated)
+
+. gen taiwangdpgrowth_lag1y = L12.taiwangdpgrowth
+(12 missing values generated)
+
+. gen exmonthlychange_lag1m = L1.exmonthlychange
+(1 missing value generated)
+
+. gen exstd_lag1m = L1.exstd
+(1 missing value generated)
+
+. 
+. * Drop rows with missing values in lagged variables
+. drop if missing(gpr_lag1m) | missing(epu_lag6m) | missing(chngdpgrowth_lag1y) | ///
+>          missing(seaavggdpgrowth_lag1y) | missing(hpi_lag1y) | missing(exstd_lag1m) | ///
+>          missing(taiwangdpgrowth_lag1y) | missing(exmonthlychange_lag1m)
+(12 observations deleted)
+
+. ***************
+. *** Summary Statistics: Table 1
+. asdoc summarize aoi_combined gpr_lag1m epu_lag6m chngdpgrowth_lag1y seaavggdpgrowth_lag1y hpi_lag1y taiwangdpgrowth_lag1y exmonthlychange_lag1m exstd_lag1m, save(summary_stats.doc) replace
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+aoi_combined |        192    983.6317    688.6744   53.97478   3846.338
+   gpr_lag1m |        192    .6236782    .3331997   .2070763   2.474723
+   epu_lag6m |        192    190.4091    121.0456   46.67107   661.8281
+chngdpgro~1y |        192    .0773437    .0274266      .0224      .1423
+seaavggdp~1y |        192    .0456562    .0232157      -.033       .074
+-------------+---------------------------------------------------------
+   hpi_lag1y |        192    114.3351    19.03364      81.82     145.91
+taiwangdp~1y |        192    .0342375     .026466     -.0161      .1025
+exmonthly~1m |        192    .0001349    .0137828     -.0332      .0497
+ exstd_lag1m |        192    .0130557    .0035989   .0066619   .0224977
+Click to Open File:  summary_stats.doc
+
+. 
+. *** Summary Statistics: Table 2
+. asdoc summarize aoi_trad aoi_adv, save(summary_stats2.doc) replace
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+    aoi_trad |        192    617.0141    439.2551   30.46137   2085.094
+     aoi_adv |        192    366.6176    286.6924   15.73997   1768.257
+Click to Open File:  summary_stats2.doc
+
+. 
+. ***************
+. *** Preliminary Test for Time Series Property
+. * Dickey Fuller Test for Stationarity
+. dfuller aoi_combined
+
+Dickey–Fuller test for unit root          Number of obs  = 191
+Variable: aoi_combined                    Number of lags =   0
+
+H0: Random walk without drift, d = 0
+
+                                       Dickey–Fuller
+                   Test      -------- critical value ---------
+              statistic           1%           5%          10%
+--------------------------------------------------------------
+ Z(t)            -9.808       -3.480       -2.884       -2.574
+--------------------------------------------------------------
+MacKinnon approximate p-value for Z(t) = 0.0000.
+
+. 
+. * Durbin-Watson Test for Autocorrelation 
+. asdoc reg aoi_combined gpr_lag1m epu_lag6m chngdpgrowth_lag1y seaavggdpgrowth_lag1y hpi_lag1y exstd_lag1m taiwangdpgrowth_lag1y exmonthlychange_lag1m, replace title(Regression Results for AOI Combin
+> ed)
+
+      Source |       SS           df       MS      Number of obs   =       192
+-------------+----------------------------------   F(8, 183)       =      8.84
+       Model |  25249894.8         8  3156236.86   Prob > F        =    0.0000
+    Residual |  65336142.4       183    357028.1   R-squared       =    0.2787
+-------------+----------------------------------   Adj R-squared   =    0.2472
+       Total |  90586037.2       191  474272.446   Root MSE        =    597.52
+
+---------------------------------------------------------------------------------------
+         aoi_combined | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+            gpr_lag1m |  -75.17729   188.7409    -0.40   0.691    -447.5654    297.2109
+            epu_lag6m |  -.8774421   .6043779    -1.45   0.148    -2.069887    .3150027
+   chngdpgrowth_lag1y |   3195.247   3590.149     0.89   0.375     -3888.16    10278.65
+seaavggdpgrowth_lag1y |  -4643.734   2329.319    -1.99   0.048    -9239.508   -47.96069
+            hpi_lag1y |  -11.00911   6.724224    -1.64   0.103    -24.27608    2.257865
+          exstd_lag1m |   11720.48   12880.13     0.91   0.364    -13692.17    37133.14
+taiwangdpgrowth_lag1y |   2648.426   2216.678     1.19   0.234    -1725.106    7021.958
+exmonthlychange_lag1m |   -54.7068   3181.928    -0.02   0.986    -6332.688    6223.274
+                _cons |   2177.515   895.7648     2.43   0.016     410.1604     3944.87
+---------------------------------------------------------------------------------------
+(file summary_stats2.doc not found)
+Click to Open File:  summary_stats2.doc
+
+. 
+. reg aoi_combined gpr_lag1m epu_lag6m chngdpgrowth_lag1y seaavggdpgrowth_lag1y hpi_lag1y exstd_lag1m taiwangdpgrowth_lag1y exmonthlychange_lag1m
+
+      Source |       SS           df       MS      Number of obs   =       192
+-------------+----------------------------------   F(8, 183)       =      8.84
+       Model |  25249894.8         8  3156236.86   Prob > F        =    0.0000
+    Residual |  65336142.4       183    357028.1   R-squared       =    0.2787
+-------------+----------------------------------   Adj R-squared   =    0.2472
+       Total |  90586037.2       191  474272.446   Root MSE        =    597.52
+
+---------------------------------------------------------------------------------------
+         aoi_combined | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+            gpr_lag1m |  -75.17729   188.7409    -0.40   0.691    -447.5654    297.2109
+            epu_lag6m |  -.8774421   .6043779    -1.45   0.148    -2.069887    .3150027
+   chngdpgrowth_lag1y |   3195.247   3590.149     0.89   0.375     -3888.16    10278.65
+seaavggdpgrowth_lag1y |  -4643.734   2329.319    -1.99   0.048    -9239.508   -47.96069
+            hpi_lag1y |  -11.00911   6.724224    -1.64   0.103    -24.27608    2.257865
+          exstd_lag1m |   11720.48   12880.13     0.91   0.364    -13692.17    37133.14
+taiwangdpgrowth_lag1y |   2648.426   2216.678     1.19   0.234    -1725.106    7021.958
+exmonthlychange_lag1m |   -54.7068   3181.928    -0.02   0.986    -6332.688    6223.274
+                _cons |   2177.515   895.7648     2.43   0.016     410.1604     3944.87
+---------------------------------------------------------------------------------------
+
+. estat dwatson
+
+Durbin–Watson d-statistic(  9,   192) =  1.898135
+
+. 
+. * Plot residuals
+. predict resid, residuals
+
+. tsline resid
+
+. 
+. * Check distribution
+. hist resid, normal
+(bin=13, start=-1002.6991, width=277.05609)
+
+. 
+. ***************
+. ** Main Regression
+. ssc install estout
+checking estout consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. 
+. reg aoi_combined gpr_lag1m epu_lag6m chngdpgrowth_lag1y seaavggdpgrowth_lag1y hpi_lag1y exstd_lag1m taiwangdpgrowth_lag1y exmonthlychange_lag1m, robust
+
+Linear regression                               Number of obs     =        192
+                                                F(8, 183)         =      13.95
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.2787
+                                                Root MSE          =     597.52
+
+---------------------------------------------------------------------------------------
+                      |               Robust
+         aoi_combined | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+            gpr_lag1m |  -75.17729   150.7605    -0.50   0.619    -372.6296     222.275
+            epu_lag6m |  -.8774421   .4397478    -2.00   0.047     -1.74507   -.0098143
+   chngdpgrowth_lag1y |   3195.247   3198.914     1.00   0.319    -3116.247    9506.742
+seaavggdpgrowth_lag1y |  -4643.734   1974.139    -2.35   0.020    -8538.733   -748.7353
+            hpi_lag1y |  -11.00911   5.336792    -2.06   0.041    -21.53866   -.4795549
+          exstd_lag1m |   11720.48   11879.32     0.99   0.325    -11717.56    35158.53
+taiwangdpgrowth_lag1y |   2648.426   2427.386     1.09   0.277    -2140.836    7437.687
+exmonthlychange_lag1m |   -54.7068   3232.742    -0.02   0.987    -6432.945    6323.531
+                _cons |   2177.515   731.5668     2.98   0.003      734.125    3620.905
+---------------------------------------------------------------------------------------
+
+. outreg2 using "main_model_regression_table.doc", replace word
+main_model_regression_table.doc
+dir : seeout
+
+. 
+. 
+. ***************
+. *** Sectorial Analysis
+. ** SEPARATE REGRESSIONS W/ STANDARDING
+. * STANDARDING AOI
+. // Step 1: Standardize the traditional sector dependent variable
+. summarize aoi_trad, detail
+
+                          aoi_trad
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%     69.59219       30.46137
+ 5%     113.2719       69.59219
+10%     162.0889       73.88988       Obs                 192
+25%     288.9397       75.02763       Sum of wgt.         192
+
+50%     532.2065                      Mean           617.0141
+                        Largest       Std. dev.      439.2551
+75%     851.9561       1950.453
+90%     1181.458       1957.829       Variance       192945.1
+95%     1497.856       2078.081       Skewness       1.240558
+99%     2078.081       2085.094       Kurtosis       4.370213
+
+. gen aoi_trad_std = (aoi_trad - r(mean)) / r(sd)
+
+. 
+. // Step 2: Standardize the advanced sector dependent variable
+. summarize aoi_adv, detail
+
+                           aoi_adv
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%     23.51341       15.73997
+ 5%     75.60046       23.51341
+10%     99.60643       27.32096       Obs                 192
+25%     161.8921       32.44528       Sum of wgt.         192
+
+50%     286.5503                      Mean           366.6176
+                        Largest       Std. dev.      286.6924
+75%     514.2614       1291.213
+90%     688.9912       1448.264       Variance       82192.54
+95%     937.7168       1578.535       Skewness       1.844357
+99%     1578.535       1768.257       Kurtosis       7.781791
+
+. gen aoi_adv_std = (aoi_adv - r(mean)) / r(sd)
+
+. 
+. * Traditional sector
+. reg aoi_trad_std gpr_lag1m epu_lag6m chngdpgrowth_lag1y seaavggdpgrowth_lag1y hpi_lag1y exstd_lag1m taiwangdpgrowth_lag1y exmonthlychange_lag1m, robust
+
+Linear regression                               Number of obs     =        192
+                                                F(8, 183)         =      14.61
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.2895
+                                                Root MSE          =     .86114
+
+---------------------------------------------------------------------------------------
+                      |               Robust
+         aoi_trad_std | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+            gpr_lag1m |  -.1838273   .1990182    -0.92   0.357    -.5764927     .208838
+            epu_lag6m |  -.0012046   .0007015    -1.72   0.088    -.0025886    .0001794
+   chngdpgrowth_lag1y |     3.1749   4.179925     0.76   0.448    -5.072141    11.42194
+seaavggdpgrowth_lag1y |  -5.706179   2.708504    -2.11   0.037    -11.05009   -.3622675
+            hpi_lag1y |  -.0176983   .0067627    -2.62   0.010    -.0310412   -.0043554
+          exstd_lag1m |   7.246882   17.03927     0.43   0.671     -26.3718    40.86556
+taiwangdpgrowth_lag1y |   3.994064   3.044959     1.31   0.191    -2.013676     10.0018
+exmonthlychange_lag1m |   2.303681   4.563888     0.50   0.614    -6.700924    11.30829
+                _cons |   2.150848   .9464143     2.27   0.024     .2835615    4.018135
+---------------------------------------------------------------------------------------
+
+. outreg2 using regression_results.doc, replace ctitle("Traditional Sector")
+regression_results.doc
+dir : seeout
+
+. 
+. * Advanced sector
+. reg aoi_adv_std gpr_lag1m epu_lag6m chngdpgrowth_lag1y seaavggdpgrowth_lag1y hpi_lag1y exstd_lag1m taiwangdpgrowth_lag1y exmonthlychange_lag1m, robust
+
+Linear regression                               Number of obs     =        192
+                                                F(8, 183)         =      10.95
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.2086
+                                                Root MSE          =     .90882
+
+---------------------------------------------------------------------------------------
+                      |               Robust
+          aoi_adv_std | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+            gpr_lag1m |   .0194278   .2454416     0.08   0.937    -.4648314     .503687
+            epu_lag6m |  -.0012149   .0006231    -1.95   0.053    -.0024443    .0000145
+   chngdpgrowth_lag1y |   6.280796   5.320755     1.18   0.239    -4.217118    16.77871
+seaavggdpgrowth_lag1y |   -7.45491   3.057093    -2.44   0.016    -13.48659   -1.423229
+            hpi_lag1y |  -.0112841   .0090968    -1.24   0.216    -.0292322     .006664
+          exstd_lag1m |   29.77845   17.32686     1.72   0.087    -4.407657    63.96455
+taiwangdpgrowth_lag1y |   3.118368   4.229973     0.74   0.462    -5.227419    11.46415
+exmonthlychange_lag1m |    -3.7204   5.040675    -0.74   0.461    -13.66571    6.224911
+                _cons |   .8689181     1.2175     0.71   0.476    -1.533224     3.27106
+---------------------------------------------------------------------------------------
+
+. outreg2 using regression_results.doc, append ctitle("Advanced Sector")
+regression_results.doc
+dir : seeout
+
+. 
+. 
+. ***************** ROBUSTNESS CHECKS 
+. * Generate alternative lag structures
+. gen gpr_lag6m = L6.gpr
+(6 missing values generated)
+
+. gen gpr_lag12m = L12.gpr
+(12 missing values generated)
+
+. gen exstd_lag6m = L6.exstd
+(6 missing values generated)
+
+. gen exstd_lag12m = L12.exstd
+(12 missing values generated)
+
+. 
+. * Drop missing values for any generated lag variables
+. drop if missing(gpr_lag6m) | missing(gpr_lag12m) | missing(exstd_lag6m) | missing(exstd_lag12m)
+(12 observations deleted)
+
+. 
+. ***************
+. *** Main Regression: AOI Combined
+. ***************
+. 
+. * Test alternative lag structures for GPR
+. ** Original regression
+. reg aoi_combined gpr_lag1m epu_lag6m chngdpgrowth_lag1y seaavggdpgrowth_lag1y hpi_lag1y exstd_lag1m taiwangdpgrowth_lag1y exmonthlychange_lag1m, robust
+
+Linear regression                               Number of obs     =        180
+                                                F(8, 171)         =      12.96
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.2815
+                                                Root MSE          =     593.24
+
+---------------------------------------------------------------------------------------
+                      |               Robust
+         aoi_combined | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+            gpr_lag1m |  -25.15041   160.2334    -0.16   0.875    -341.4405    291.1397
+            epu_lag6m |  -.6425428   .4628067    -1.39   0.167    -1.556093     .271007
+   chngdpgrowth_lag1y |   5064.179   3354.124     1.51   0.133    -1556.641       11685
+seaavggdpgrowth_lag1y |  -5384.842    2016.35    -2.67   0.008    -9364.983   -1404.701
+            hpi_lag1y |  -13.93384   5.581187    -2.50   0.013    -24.95074   -2.916949
+          exstd_lag1m |  -215.7521    12778.6    -0.02   0.987    -25439.87    25008.36
+taiwangdpgrowth_lag1y |    3452.12   2354.065     1.47   0.144    -1194.649     8098.89
+exmonthlychange_lag1m |   41.03691   3538.403     0.01   0.991    -6943.537    7025.611
+                _cons |   2478.722   747.6134     3.32   0.001     1002.982    3954.461
+---------------------------------------------------------------------------------------
+
+. outreg2 using lag_sensitivity_check.doc, append ctitle("Lag 1: GPR and ExStd")
+lag_sensitivity_check.doc
+dir : seeout
+
+. 
+. ** GPR and exstd lag 6 months 
+. reg aoi_combined gpr_lag6m epu_lag6m chngdpgrowth_lag1y seaavggdpgrowth_lag1y hpi_lag1y exstd_lag6m taiwangdpgrowth_lag1y exmonthlychange_lag1m, robust
+
+Linear regression                               Number of obs     =        180
+                                                F(8, 171)         =      13.26
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.2879
+                                                Root MSE          =     590.59
+
+---------------------------------------------------------------------------------------
+                      |               Robust
+         aoi_combined | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+            gpr_lag6m |   138.9963   150.5524     0.92   0.357    -158.1842    436.1768
+            epu_lag6m |  -.8801716   .4685802    -1.88   0.062    -1.805118    .0447748
+   chngdpgrowth_lag1y |   4197.414   3540.728     1.19   0.237    -2791.749    11186.58
+seaavggdpgrowth_lag1y |  -5530.316   1961.535    -2.82   0.005    -9402.258   -1658.375
+            hpi_lag1y |  -14.72536   5.677634    -2.59   0.010    -25.93264   -3.518088
+          exstd_lag6m |   13569.97   13912.24     0.98   0.331    -13891.87    41031.81
+taiwangdpgrowth_lag1y |   4055.607   2553.701     1.59   0.114    -985.2298    9096.444
+exmonthlychange_lag1m |  -141.2928   3533.531    -0.04   0.968    -7116.249    6833.663
+                _cons |   2384.499   789.0374     3.02   0.003     826.9912    3942.007
+---------------------------------------------------------------------------------------
+
+. outreg2 using lag_sensitivity_check.doc, append ctitle("Lag 6: GPR and ExStd")
+lag_sensitivity_check.doc
+dir : seeout
+
+. 
+. ** GPR lag 12 months 
+. reg aoi_combined gpr_lag12m epu_lag6m chngdpgrowth_lag1y seaavggdpgrowth_lag1y hpi_lag1y exstd_lag12m taiwangdpgrowth_lag1y exmonthlychange_lag1m, robust
+
+Linear regression                               Number of obs     =        180
+                                                F(8, 171)         =      13.13
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.2833
+                                                Root MSE          =      592.5
+
+---------------------------------------------------------------------------------------
+                      |               Robust
+         aoi_combined | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+           gpr_lag12m |    5.44884   163.4129     0.03   0.973    -317.1175    328.0152
+            epu_lag6m |   -.708994   .4582473    -1.55   0.124    -1.613544    .1955559
+   chngdpgrowth_lag1y |   4551.252   3483.037     1.31   0.193    -2324.032    11426.54
+seaavggdpgrowth_lag1y |  -5097.797   1999.806    -2.55   0.012    -9045.282   -1150.311
+            hpi_lag1y |  -13.58416   5.282683    -2.57   0.011    -24.01183    -3.15649
+         exstd_lag12m |   9259.892   14900.78     0.62   0.535    -20153.25    38673.04
+taiwangdpgrowth_lag1y |   3606.686    2431.78     1.48   0.140    -1193.488    8406.859
+exmonthlychange_lag1m |   99.99735   3452.906     0.03   0.977    -6715.812    6915.807
+                _cons |   2328.643   745.5779     3.12   0.002     856.9217    3800.365
+---------------------------------------------------------------------------------------
+
+. outreg2 using lag_sensitivity_check.doc, append ctitle("Lag 12: GPR and ExStd")
+lag_sensitivity_check.doc
+dir : seeout
+
+. 
+. ***************
+. *** Sectoral Analysis: Traditional Sector
+. ***************
+. 
+. * Traditional sector regression with alternative lags
+. reg aoi_trad_std gpr_lag1m epu_lag6m chngdpgrowth_lag1y seaavggdpgrowth_lag1y hpi_lag1y exstd_lag1m taiwangdpgrowth_lag1y exmonthlychange_lag1m, robust
+
+Linear regression                               Number of obs     =        180
+                                                F(8, 171)         =      14.35
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.2904
+                                                Root MSE          =     .85554
+
+---------------------------------------------------------------------------------------
+                      |               Robust
+         aoi_trad_std | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+            gpr_lag1m |  -.1122068   .2083025    -0.54   0.591    -.5233821    .2989685
+            epu_lag6m |  -.0008788   .0007209    -1.22   0.224    -.0023017    .0005442
+   chngdpgrowth_lag1y |   5.777116   4.277948     1.35   0.179    -2.667271     14.2215
+seaavggdpgrowth_lag1y |  -6.764254    2.72117    -2.49   0.014    -12.13566   -1.392845
+            hpi_lag1y |  -.0218834   .0070497    -3.10   0.002     -.035799   -.0079677
+          exstd_lag1m |  -9.424818   18.35926    -0.51   0.608    -45.66479    26.81515
+taiwangdpgrowth_lag1y |    5.15942   2.896443     1.78   0.077     -.557968    10.87681
+exmonthlychange_lag1m |   2.347423   4.944095     0.47   0.636    -7.411893    12.10674
+                _cons |   2.583036   .9665636     2.67   0.008     .6751028    4.490968
+---------------------------------------------------------------------------------------
+
+. outreg2 using sectoral_lag_sensitivity.doc, replace ctitle("Traditional: Lag 1")
+sectoral_lag_sensitivity.doc
+dir : seeout
+
+. 
+. reg aoi_trad_std gpr_lag6m epu_lag6m chngdpgrowth_lag1y seaavggdpgrowth_lag1y hpi_lag1y exstd_lag6m taiwangdpgrowth_lag1y exmonthlychange_lag1m, robust
+
+Linear regression                               Number of obs     =        180
+                                                F(8, 171)         =      14.22
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.2918
+                                                Root MSE          =     .85471
+
+---------------------------------------------------------------------------------------
+                      |               Robust
+         aoi_trad_std | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+            gpr_lag6m |   .1415994   .1949091     0.73   0.469    -.2431383    .5263371
+            epu_lag6m |  -.0012542   .0007465    -1.68   0.095    -.0027278    .0002193
+   chngdpgrowth_lag1y |    4.24333   4.361914     0.97   0.332    -4.366799    12.85346
+seaavggdpgrowth_lag1y |  -7.067176   2.627959    -2.69   0.008    -12.25459   -1.879758
+            hpi_lag1y |   -.023191   .0076548    -3.03   0.003    -.0383011    -.008081
+          exstd_lag6m |   13.57705   22.99721     0.59   0.556    -31.81793    58.97202
+taiwangdpgrowth_lag1y |   5.925166   3.147469     1.88   0.061    -.2877292    12.13806
+exmonthlychange_lag1m |   2.166202   5.033582     0.43   0.667    -7.769757    12.10216
+                _cons |   2.447961   1.116283     2.19   0.030     .2444934     4.65143
+---------------------------------------------------------------------------------------
+
+. outreg2 using sectoral_lag_sensitivity.doc, append ctitle("Traditional: Lag 6")
+sectoral_lag_sensitivity.doc
+dir : seeout
+
+. 
+. reg aoi_trad_std gpr_lag12m epu_lag6m chngdpgrowth_lag1y seaavggdpgrowth_lag1y hpi_lag1y exstd_lag12m taiwangdpgrowth_lag1y exmonthlychange_lag1m, robust
+
+Linear regression                               Number of obs     =        180
+                                                F(8, 171)         =      14.46
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.2911
+                                                Root MSE          =     .85511
+
+---------------------------------------------------------------------------------------
+                      |               Robust
+         aoi_trad_std | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+           gpr_lag12m |    -.03733   .2613133    -0.14   0.887    -.5531452    .4784853
+            epu_lag6m |  -.0010973   .0007347    -1.49   0.137    -.0025476     .000353
+   chngdpgrowth_lag1y |   4.191342   4.621135     0.91   0.366    -4.930473    13.31316
+seaavggdpgrowth_lag1y |  -6.221429   2.968074    -2.10   0.038    -12.08021   -.3626463
+            hpi_lag1y |  -.0210974   .0068313    -3.09   0.002    -.0345818   -.0076129
+         exstd_lag12m |   15.63625   19.78784     0.79   0.431    -23.42364    54.69614
+taiwangdpgrowth_lag1y |   5.487429   3.004093     1.83   0.069    -.4424526    11.41731
+exmonthlychange_lag1m |   2.359848   4.760955     0.50   0.621    -7.037962    11.75766
+                _cons |   2.239512   .9600726     2.33   0.021     .3443924    4.134632
+---------------------------------------------------------------------------------------
+
+. outreg2 using sectoral_lag_sensitivity.doc, append ctitle("Traditional: Lag 12")
+sectoral_lag_sensitivity.doc
+dir : seeout
+
+. 
+. ***************
+. *** Sectoral Analysis: Advanced Sector
+. ***************
+. 
+. * Advanced sector regression with alternative lags
+. reg aoi_adv_std gpr_lag1m epu_lag6m chngdpgrowth_lag1y seaavggdpgrowth_lag1y hpi_lag1y exstd_lag1m taiwangdpgrowth_lag1y exmonthlychange_lag1m, robust
+
+Linear regression                               Number of obs     =        180
+                                                F(8, 171)         =       9.16
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.2105
+                                                Root MSE          =     .90971
+
+---------------------------------------------------------------------------------------
+                      |               Robust
+          aoi_adv_std | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+            gpr_lag1m |   .0841913   .2627531     0.32   0.749    -.4344659    .6028485
+            epu_lag6m |  -.0008948   .0006783    -1.32   0.189    -.0022337    .0004441
+   chngdpgrowth_lag1y |   8.812759   5.624441     1.57   0.119    -2.289515    19.91503
+seaavggdpgrowth_lag1y |  -8.418809   3.192271    -2.64   0.009    -14.72014   -2.117478
+            hpi_lag1y |  -.0150735   .0095959    -1.57   0.118    -.0340151    .0038681
+          exstd_lag1m |   13.68766   18.77894     0.73   0.467    -23.38074    50.75605
+taiwangdpgrowth_lag1y |   4.136206   4.209892     0.98   0.327    -4.173843    12.44625
+exmonthlychange_lag1m |   -3.45346   5.605602    -0.62   0.539    -14.51855    7.611629
+                _cons |    1.25737   1.248466     1.01   0.315    -1.207019    3.721758
+---------------------------------------------------------------------------------------
+
+. outreg2 using sectoral_lag_sensitivity.doc, replace ctitle("Advanced: Lag 1")
+sectoral_lag_sensitivity.doc
+dir : seeout
+
+. 
+. reg aoi_adv_std gpr_lag6m epu_lag6m chngdpgrowth_lag1y seaavggdpgrowth_lag1y hpi_lag1y exstd_lag6m taiwangdpgrowth_lag1y exmonthlychange_lag1m, robust
+
+Linear regression                               Number of obs     =        180
+                                                F(8, 171)         =       9.53
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.2195
+                                                Root MSE          =     .90449
+
+---------------------------------------------------------------------------------------
+                      |               Robust
+          aoi_adv_std | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+            gpr_lag6m |   .2678761   .2419523     1.11   0.270    -.2097218    .7454739
+            epu_lag6m |  -.0011484   .0006518    -1.76   0.080     -.002435    .0001381
+   chngdpgrowth_lag1y |   8.139416   6.061451     1.34   0.181    -3.825488    20.10432
+seaavggdpgrowth_lag1y |  -8.462111    3.10687    -2.72   0.007    -14.59487   -2.329355
+            hpi_lag1y |  -.0158309   .0089964    -1.76   0.080    -.0335892    .0019275
+          exstd_lag6m |   26.53082   17.94058     1.48   0.141     -8.88269    61.94433
+taiwangdpgrowth_lag1y |   5.067968   4.483797     1.13   0.260    -3.782753    13.91869
+exmonthlychange_lag1m |  -3.811778    5.50319    -0.69   0.489    -14.67471    7.051154
+                _cons |   1.135669   1.202517     0.94   0.346     -1.23802    3.509357
+---------------------------------------------------------------------------------------
+
+. outreg2 using sectoral_lag_sensitivity.doc, append ctitle("Advanced: Lag 6")
+sectoral_lag_sensitivity.doc
+dir : seeout
+
+. 
+. reg aoi_adv_std gpr_lag12m epu_lag6m chngdpgrowth_lag1y seaavggdpgrowth_lag1y hpi_lag1y exstd_lag12m taiwangdpgrowth_lag1y exmonthlychange_lag1m, robust
+
+Linear regression                               Number of obs     =        180
+                                                F(8, 171)         =       9.21
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.2092
+                                                Root MSE          =     .91047
+
+---------------------------------------------------------------------------------------
+                      |               Robust
+          aoi_adv_std | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+           gpr_lag12m |   .0762009    .224187     0.34   0.734    -.3663294    .5187311
+            epu_lag6m |  -.0007918   .0006229    -1.27   0.205    -.0020213    .0004377
+   chngdpgrowth_lag1y |    9.45328   5.725601     1.65   0.101     -1.84868    20.75524
+seaavggdpgrowth_lag1y |  -8.249268   2.914638    -2.83   0.005    -14.00257   -2.495964
+            hpi_lag1y |  -.0150581   .0086591    -1.74   0.084    -.0321505    .0020344
+         exstd_lag12m |   8.342003   23.16065     0.36   0.719    -37.37558    54.05959
+taiwangdpgrowth_lag1y |    4.17278   4.296806     0.97   0.333    -4.308832    12.65439
+exmonthlychange_lag1m |   -3.26684   5.520184    -0.59   0.555    -14.16332     7.62964
+                _cons |   1.260216   1.213974     1.04   0.301    -1.136088     3.65652
+---------------------------------------------------------------------------------------
+
+. outreg2 using sectoral_lag_sensitivity.doc, append ctitle("Advanced: Lag 12")
+sectoral_lag_sensitivity.doc
+dir : seeout
+
+. 
+. log close
+      name:  <unnamed>
+       log:  /Users/williamwu/Desktop/ECO375 New Datasets/myanalysis.log
+  log type:  text
+ closed on:   3 Dec 2024, 17:46:44
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
